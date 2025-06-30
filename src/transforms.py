@@ -8,6 +8,8 @@
 from logging import getLogger
 
 from PIL import ImageFilter
+from src.fourier_features import FourierFeatures
+
 
 import torch
 import torchvision.transforms as transforms
