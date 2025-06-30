@@ -48,6 +48,7 @@ from src.helper import (
     init_model,
     init_opt)
 from src.transforms import make_transforms
+from src.fourier_features import FourierFeatures
 
 # --
 log_timings = True
@@ -188,20 +189,21 @@ def main(args, resume_preempt=False):
         color_distortion=use_color_distortion,
         color_jitter=color_jitter)
 
+    fourier_transform = FourierFeatures(n_fourier=3)
+    transform.transforms.append(fourier_transform)
+
     # -- init data-loaders/samplers
-    _, unsupervised_loader, unsupervised_sampler = make_imagenet1k(
-            transform=transform,
-            batch_size=batch_size,
-            collator=mask_collator,
-            pin_mem=pin_mem,
-            training=True,
-            num_workers=num_workers,
-            world_size=world_size,
-            rank=rank,
-            root_path=root_path,
-            image_folder=image_folder,
-            copy_data=copy_data,
-            drop_last=True)
+    dataset = SingleImageDataset(
+        image_path='images/cat.jpg',
+        transform=transform)
+    unsupervised_loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=pin_mem,
+        drop_last=True)
+    unsupervised_sampler = None # No sampler needed for single image
     ipe = len(unsupervised_loader)
 
     # -- init optimizer and scheduler
@@ -268,7 +270,8 @@ def main(args, resume_preempt=False):
         logger.info('Epoch %d' % (epoch + 1))
 
         # -- update distributed-data-loader epoch
-        unsupervised_sampler.set_epoch(epoch)
+        if unsupervised_sampler is not None:
+            unsupervised_sampler.set_epoch(epoch)
 
         loss_meter = AverageMeter()
         maskA_meter = AverageMeter()

@@ -332,7 +332,7 @@ class VisionTransformer(nn.Module):
         self,
         img_size=[224],
         patch_size=16,
-        in_chans=3,
+        in_chans=12,
         embed_dim=768,
         predictor_embed_dim=384,
         depth=12,
