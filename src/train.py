@@ -193,17 +193,20 @@ def main(args, resume_preempt=False):
     transform.transforms.append(fourier_transform)
 
     # -- init data-loaders/samplers
-    dataset = SingleImageDataset(
-        image_path='images/cat.jpg',
-        transform=transform)
-    unsupervised_loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=1,
-        shuffle=False,
-        num_workers=0,
-        pin_memory=pin_mem,
-        drop_last=True)
-    unsupervised_sampler = None # No sampler needed for single image
+    # -- init data-loaders/samplers
+    _, unsupervised_loader, unsupervised_sampler = make_imagenet1k(
+            transform=transform,
+            batch_size=batch_size,
+            collator=mask_collator,
+            pin_mem=pin_mem,
+            training=True,
+            num_workers=num_workers,
+            world_size=world_size,
+            rank=rank,
+            root_path=root_path,
+            image_folder=image_folder,
+            copy_data=copy_data,
+            drop_last=True)
     ipe = len(unsupervised_loader)
 
     # -- init optimizer and scheduler
